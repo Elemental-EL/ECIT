@@ -114,15 +114,15 @@ class BoundaryPlotterWindow:
         )
         self.step_counter_label.pack(side=tk.LEFT, expand=True)
 
-        self.btn_next = tk.Button(
-            ctrl_frame, text="Next Step >", command=self.next_step, **btn_style
-        )
-        self.btn_next.pack(side=tk.RIGHT, padx=4)
-
         self.btn_last = tk.Button(
             ctrl_frame, text="Last >|", command=self.last_step, **btn_style
         )
         self.btn_last.pack(side=tk.RIGHT, padx=4)
+
+        self.btn_next = tk.Button(
+            ctrl_frame, text="Next Step >", command=self.next_step, **btn_style
+        )
+        self.btn_next.pack(side=tk.RIGHT, padx=4)
 
         self.root.bind("<Left>", lambda _e: self.prev_step())
         self.root.bind("<Right>", lambda _e: self.next_step())
@@ -283,18 +283,45 @@ class BoundaryPlotterWindow:
                         p1[0], p1[1], p2[0], p2[1], fill=color, width=3
                     )
 
-        w_norm = math.hypot(w1, w2)
+        w_norm_sq = w1 * w1 + w2 * w2
+        w_norm = math.sqrt(w_norm_sq)
         if w_norm > 1e-9:
-            max_arrow_len = 1.5
-            scale = min(1.0, max_arrow_len / w_norm)
-            u0, v0 = self._world_to_pixel(0.0, 0.0)
-            u1, v1 = self._world_to_pixel(w1 * scale, w2 * scale)
+            base_x1 = (-b_val * w1) / w_norm_sq
+            base_x2 = (-b_val * w2) / w_norm_sq
+
+            if not (
+                self.x_min <= base_x1 <= self.x_max
+                and self.y_min <= base_y2 <= self.y_max
+                if (base_y2 := base_x2) is not None
+                else False
+            ):
+                center_seg = self._compute_clipped_line(w1, w2, -b_val)
+                if center_seg is not None:
+                    base_x1 = 0.5 * (center_seg[0][0] + center_seg[1][0])
+                    base_x2 = 0.5 * (center_seg[0][1] + center_seg[1][1])
+                else:
+                    base_x1, base_x2 = 0.0, 0.0
+
+            arrow_len = 1.1
+            tip_x1 = base_x1 + (w1 / w_norm) * arrow_len
+            tip_x2 = base_x2 + (w2 / w_norm) * arrow_len
+
+            u0, v0 = self._world_to_pixel(base_x1, base_x2)
+            u1, v1 = self._world_to_pixel(tip_x1, tip_x2)
+
+            self.canvas.create_oval(
+                u0 - 3, v0 - 3, u0 + 3, v0 + 3, fill="#89b4fa", outline="#89b4fa"
+            )
             self.canvas.create_line(
                 u0, v0, u1, v1, fill="#89b4fa", width=2, arrow=tk.LAST
             )
+
+            label_x1 = base_x1 + (w1 / w_norm) * (arrow_len + 0.35)
+            label_x2 = base_x2 + (w2 / w_norm) * (arrow_len + 0.35)
+            ul, vl = self._world_to_pixel(label_x1, label_x2)
             self.canvas.create_text(
-                u1 + 12,
-                v1 - 10,
+                ul,
+                vl,
                 text=f"W=[{w1:.1f},{w2:.1f}]",
                 fill="#89b4fa",
                 font=("Consolas", 9, "bold"),
