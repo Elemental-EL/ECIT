@@ -9,7 +9,7 @@ class InitModes(Enum):
     Random_Uniform = "random_uniform"
 
 class DenseLayer:
-    def __init__(self, in_features: int, out_features: int, activation: Activation, use_bias: bool = True, init_mode: InitModes = InitModes.Zeroes, seed= None) -> None:
+    def __init__(self, in_features: int, out_features: int, activation: Activation, use_bias: bool = True, init_mode: str = InitModes.Zeroes.value, seed= None) -> None:
         if in_features < 1 or out_features < 1:
             raise ValueError("Input and Output sizes should be positive")
         self.in_features = in_features
@@ -19,12 +19,12 @@ class DenseLayer:
         self.last_input = None
         self.last_net_input = None
         self.last_output = None
-        if init_mode == InitModes.Zeroes:
+        if init_mode == InitModes.Zeroes.value:
             self.weights = Matrix.zeros(in_features, out_features)
             if use_bias:
                 self.biases = Matrix.zeros(1, out_features)
             else: self.biases = None
-        elif init_mode == InitModes.Random_Uniform:
+        elif init_mode == InitModes.Random_Uniform.value:
             self.weights = Matrix.random_uniform(in_features, out_features, -0.5, 0.5, seed=seed)
             if use_bias:
                 self.biases = Matrix.random_uniform(1, out_features, -0.5, 0.5, seed=seed if seed is None else seed + 1)

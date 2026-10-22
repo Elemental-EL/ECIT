@@ -6,14 +6,14 @@ from .callback import Callback, StepRecord
 
 
 class TrainResult:
-    def __init__(self, history: list[StepRecord], converged: bool, epochs_run: int, final_accuracy: float):
+    def __init__(self, history: list[StepRecord], converged: bool | None, epochs_run: int, final_accuracy: float):
         self.history = history
         self.converged = converged
         self.epochs_run = epochs_run
         self.final_accuracy = final_accuracy
 
 class Trainer:
-    def __init__(self, max_epochs: int, stop_on_convergence: bool = True):
+    def __init__(self, max_epochs: int, stop_on_convergence: bool | None = None):
         if max_epochs < 1:
             raise ValueError("Invalid epoch number")
         self.max_epochs = max_epochs
@@ -27,7 +27,7 @@ class Trainer:
         if callbacks is None: callbacks = []
         
         history: list[StepRecord] = []
-        converged = False
+        converged = False if self.stop_on_convergence is not None else None
         epochs_run = 0
         num_samples = X.shape()[0]
         for cb in callbacks:
@@ -52,7 +52,7 @@ class Trainer:
                     cb.on_step_end(record, layer)
             for cb in callbacks:
                 cb.on_epoch_end(epoch, epoch_changed, layer)
-            if self.stop_on_convergence is True and not epoch_changed:
+            if self.stop_on_convergence is not None and self.stop_on_convergence is True and not epoch_changed:
                 converged = True
                 break
         accuracy = self.evaluate(layer, X, T)

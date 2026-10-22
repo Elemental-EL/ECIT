@@ -29,7 +29,7 @@ class Callback:
     def on_epoch_end(self, epoch: int, epoch_changed: bool, layer):
         pass
 
-    def on_train_end(self, history: list[StepRecord], converged: bool, epochs_run: int, layer):
+    def on_train_end(self, history: list[StepRecord], converged: bool | None, epochs_run: int, layer):
         pass
 
 
@@ -77,9 +77,12 @@ class TableLoggerCallback(Callback):
         row_line = " | ".join(row_parts)
         print(row_line)
     
-    def on_train_end(self, history: list[StepRecord], converged: bool, epochs_run: int, layer):
+    def on_train_end(self, history: list[StepRecord], converged: bool | None, epochs_run: int, layer):
         print("-" * self.line_width)
-        print(f"Epochs Run: {epochs_run} | Converged: {converged} | Total Steps: {len(history)}")
+        if converged is not None:
+            print(f"Epochs Run: {epochs_run} | Converged: {converged} | Total Steps: {len(history)}")
+        else:
+            print(f"Epochs Run: {epochs_run} | Total Steps: {len(history)}")
 
 class StepSnapshotCallback(Callback):
     def __init__(self) -> None:
