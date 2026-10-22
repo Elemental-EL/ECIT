@@ -1,7 +1,7 @@
 from enum import Enum
 
-from ..activations.activations import Activation
-from ..math.matrix import Matrix
+from ecit.activations.activations import Activation
+from ecit.math.matrix import Matrix
 
 
 class InitModes(Enum):

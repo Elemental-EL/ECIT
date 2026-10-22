@@ -1,4 +1,4 @@
-from ..math.matrix import Matrix
+from ecit.math.matrix import Matrix
 
 
 class StepRecord:

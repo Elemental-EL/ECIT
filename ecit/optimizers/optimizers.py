@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
-from ..layers.dense import DenseLayer
-from ..math.matrix import Matrix
+from ecit.layers.dense import DenseLayer
+from ecit.math.matrix import Matrix
 
 
 class Optimizer(ABC):

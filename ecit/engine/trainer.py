@@ -1,6 +1,7 @@
-from ..layers.dense import DenseLayer
-from ..math.matrix import Matrix
-from ..optimizers.optimizers import Optimizer
+from ecit.layers.dense import DenseLayer
+from ecit.math.matrix import Matrix
+from ecit.optimizers.optimizers import Optimizer
+
 from .callback import Callback, StepRecord
 
 

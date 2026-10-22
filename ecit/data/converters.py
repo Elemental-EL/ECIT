@@ -1,4 +1,7 @@
-from ..math.matrix import Matrix
+import json
+from pathlib import Path
+
+from ecit.math.matrix import Matrix
 
 
 def _to_bipolar(n: float) -> float:
@@ -77,3 +80,33 @@ def encode_targets(class_indices: list[int], num_classes: int, mode: str = "bipo
         else:
             raise ValueError("Class index out of bounds")
     return Matrix(target_rows)
+
+def load_xo_dataset(file_path: str | Path, input_mode: str = "bipolar", multi_category: bool = False) -> tuple[Matrix, Matrix]:
+    path = Path(file_path)
+    if not path.exists():
+        raise FileNotFoundError(f"Dataset file not found at '{path}'")
+
+    with open(path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    samples = data.get("samples", [])
+    if len(samples) == 0:
+        raise ValueError(f"Dataset file '{path}' contains 0 samples")
+
+    x_rows: list[list[float]] = []
+    single_targets: list[list[float]] = []
+    class_indices: list[int] = []
+
+    for sample in samples:
+        vec_mat = encode_grid(sample["grid"], active_symbol="#", mode=input_mode)
+        x_rows.append(vec_mat.matrix[0])
+        single_targets.append([float(sample["bipolar_target"])])
+        class_indices.append(int(sample["class_index"]))
+
+    X = Matrix(x_rows)
+    if multi_category:
+        T = encode_targets(class_indices, num_classes=2, mode="bipolar")
+    else:
+        T = Matrix(single_targets)
+
+    return (X, T)
