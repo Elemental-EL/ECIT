@@ -16,6 +16,17 @@ class StepRecord:
         self.changed = changed
 
 
+class EpochRecord:
+    def __init__(self, epoch: int, train_mse: float, train_error_rate: float, val_mse: float | None, val_error_rate: float | None, test_mse: float | None, test_error_rate: float | None, val_fail_count: int) -> None:
+        self.epoch = epoch
+        self.train_mse = train_mse
+        self.train_error_rate = train_error_rate
+        self.val_mse = val_mse
+        self.val_error_rate = val_error_rate
+        self.test_mse = test_mse
+        self.test_error_rate = test_error_rate
+        self.val_fail_count = val_fail_count
+
 class Callback:
     def on_train_begin(self, layer):
         pass

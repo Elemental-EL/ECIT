@@ -5,7 +5,9 @@ import random
 import tkinter as tk
 from pathlib import Path
 
+from ecit.activations.activations import LogSigmoid
 from ecit.layers.dense import DenseLayer
+from ecit.layers.network import MultiLayerNetwork
 from ecit.math.matrix import Matrix
 
 PRESETS: dict[str, list[str]] = {
@@ -36,7 +38,7 @@ class CharacterGridGUI:
     
     def __init__(
         self,
-        layer: DenseLayer | None = None,
+        layer: DenseLayer | MultiLayerNetwork | None = None,
         rows: int = 5,
         cols: int = 5,
         dataset_path: str | Path | None = None,
@@ -353,31 +355,44 @@ class CharacterGridGUI:
         if self.layer.out_features == 1:
             yni_val = yni_mat.item()
             y_val = y_mat.item()
-            key = round(y_val)
-            label = self.class_map.get(key, f"Class {key}")
-            color = "#a6e3a1" if key != 0 else "#f9e2af"
+
+            if isinstance(self.layer, MultiLayerNetwork):
+                out_act = self.layer.layers[-1].activation
+                threshold = 0.5 if isinstance(out_act, LogSigmoid) else 0.0
+                key = 1 if y_val >= threshold else -1
+                label = self.class_map.get(key, f"Class {key}")
+                color = "#a6e3a1"
+            else:
+                key = round(y_val)
+                label = self.class_map.get(key, f"Class {key}")
+                color = "#a6e3a1" if key != 0 else "#f9e2af"
 
             self.pred_label.config(text=f"Predicted Pattern: {label}", fg=color)
             self.telemetry_label.config(
-                text=f"Net Input (y_NI) = {yni_val:+.2f}   |   Activated Output (y) = {y_val:+.1f}"
+                text=f"Net Input (y_NI) = {yni_val:+.3f}   |   Activated Output (y) = {y_val:+.4f}"
             )
         else:
             yni_list = yni_mat.matrix[0]
             y_list = y_mat.matrix[0]
 
-            positive_indices = [j for j, val in enumerate(y_list) if val > 0.5]
-            undecided_indices = [j for j, val in enumerate(y_list) if abs(val) <= 0.5]
-
-            if len(positive_indices) == 1 and len(undecided_indices) == 0:
-                winner = positive_indices[0]
+            if isinstance(self.layer, MultiLayerNetwork):
+                winner = max(range(len(y_list)), key=lambda j: y_list[j])
                 label = self.class_map.get(winner, f"Class {winner}")
                 color = "#a6e3a1"
             else:
-                label = "Ambiguous / Undecided"
-                color = "#f38ba8"
+                positive_indices = [j for j, val in enumerate(y_list) if val > 0.5]
+                undecided_indices = [j for j, val in enumerate(y_list) if abs(val) <= 0.5]
 
-            yni_str = "[" + ", ".join(f"{v:+.2f}" for v in yni_list) + "]"
-            y_str = "[" + ", ".join(f"{v:+.1f}" for v in y_list) + "]"
+                if len(positive_indices) == 1 and len(undecided_indices) == 0:
+                    winner = positive_indices[0]
+                    label = self.class_map.get(winner, f"Class {winner}")
+                    color = "#a6e3a1"
+                else:
+                    label = "Ambiguous / Undecided"
+                    color = "#f38ba8"
+
+            yni_str = "[" + ", ".join(f"{v:+.3f}" for v in yni_list) + "]"
+            y_str = "[" + ", ".join(f"{v:+.4f}" for v in y_list) + "]"
             self.pred_label.config(text=f"Predicted Pattern: {label}", fg=color)
             self.telemetry_label.config(
                 text=f"Net Input Vector y_NI = {yni_str}   |   Output Vector y = {y_str}"

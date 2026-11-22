@@ -78,6 +78,14 @@ class LogSigmoid(Activation):
         net_input = self.forward(net_input)
         return net_input * (1.0 - net_input)
 
+class BipolarSigmoid(Activation):
+    
+    def forward(self, net_input: float) -> float:
+        return 2.0 / (1.0 + math.exp(-net_input)) - 1
+    
+    def derivative(self, net_input: float) -> float:
+        return 0.5 * (1.0 + self.forward(net_input)) * (1.0 - self.forward(net_input))
+
 class HyperbolicTangentSigmoid(Activation):
     
     def forward(self, net_input: float) -> float:
